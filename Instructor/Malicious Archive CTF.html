@@ -1,0 +1,276 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Malicious Archive CTF</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: case-file header with live score dial, then a single column of evidence-item answer rows */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --ink: #142233;
+  --muted: #5a6878;
+  --line: #d3dae2;
+  --accent: #c2410c;
+  --accent-soft: #fbe6da;
+  --ok: #15803d;
+  --ok-soft: #dcf2e3;
+  --bad: #b91c1c;
+  --bad-soft: #fbe1e1;
+  --field: #f6f8fa;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1720; --surface: #16212d; --ink: #e3e9ef; --muted: #93a2b2; --line: #263445;
+  --accent: #fb923c; --accent-soft: #3a2416; --ok: #4ade80; --ok-soft: #12301f;
+  --bad: #f87171; --bad-soft: #3a1717; --field: #101a24; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1720; --surface: #16212d; --ink: #e3e9ef; --muted: #93a2b2; --line: #263445;
+  --accent: #fb923c; --accent-soft: #3a2416; --ok: #4ade80; --ok-soft: #12301f;
+  --bad: #f87171; --bad-soft: #3a1717; --field: #101a24; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 32px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 24px; }
+
+header { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; justify-content: space-between; }
+.case { min-width: 0; flex: 1 1 320px; display: grid; gap: 6px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 5vw, 38px); line-height: 1.1; margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); margin: 0; max-width: 60ch; }
+
+.score { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+.dial { width: 64px; height: 64px; }
+.dial circle { fill: none; stroke-width: 7; }
+.dial .track { stroke: var(--line); }
+.dial .fill { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .5s ease; transform: rotate(-90deg); transform-origin: 50% 50%; }
+.score-num { font-family: var(--display); font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.score-num small { font-size: 15px; color: var(--muted); font-weight: 500; }
+.score-sub { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.player { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.player label { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.player input { flex: 1 1 220px; }
+.rules { font-size: 13px; color: var(--muted); flex-basis: 100%; margin: 0; }
+.rules code { font-family: var(--mono); background: var(--field); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+
+ol.qs { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.q { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; grid-template-columns: 48px 1fr; gap: 4px 14px; transition: border-color .2s, background .2s; }
+.q.solved { border-color: var(--ok); }
+.qid { grid-row: span 3; font-family: var(--display); font-weight: 700; font-size: 20px; color: var(--accent); background: var(--accent-soft); border-radius: 8px; height: 48px; display: grid; place-items: center; }
+.q.solved .qid { color: var(--ok); background: var(--ok-soft); }
+.qhead { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; justify-content: space-between; min-width: 0; }
+.qtitle { font-weight: 600; font-size: 16px; margin: 0; }
+.pts { font-family: var(--mono); font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.pts.big { border-color: var(--accent); color: var(--accent); }
+.qtext { margin: 0; color: var(--muted); font-size: 14px; min-width: 0; }
+.qtext em { font-style: normal; font-family: var(--mono); font-size: 13px; color: var(--ink); }
+.row { display: flex; gap: 8px; margin-top: 8px; min-width: 0; }
+
+input[type=text] { font-family: var(--mono); font-size: 14px; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 7px; padding: 9px 11px; min-width: 0; flex: 1; }
+input[type=text]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+input[disabled] { color: var(--ok); opacity: 1; }
+button { font-family: var(--body); font-weight: 600; font-size: 14px; border-radius: 7px; padding: 9px 16px; cursor: pointer; border: 1px solid var(--accent); background: var(--accent); color: #fff; white-space: nowrap; }
+:root[data-theme="dark"] button, button { color: var(--surface); }
+button:hover { filter: brightness(1.08); }
+button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+button[disabled] { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); cursor: default; filter: none; }
+button.ghost { background: transparent; color: var(--muted); border-color: var(--line); }
+button.danger { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+
+.status { grid-column: 2; font-size: 13px; min-height: 0; font-variant-numeric: tabular-nums; }
+.status.ok { color: var(--ok); }
+.status.bad { color: var(--bad); }
+.q.shake { animation: shake .35s; }
+@keyframes shake { 25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-2px); } }
+
+.foot { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 16px; font-size: 13px; color: var(--muted); }
+.confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.done { background: var(--ok-soft); border: 1px solid var(--ok); color: var(--ink); border-radius: 10px; padding: 16px; display: grid; gap: 4px; }
+.done strong { font-family: var(--display); font-size: 20px; color: var(--ok); }
+
+@media (max-width: 480px) {
+  .q { grid-template-columns: 1fr; }
+  .qid { grid-row: auto; height: 32px; width: 48px; font-size: 15px; }
+  .status { grid-column: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .q.shake { animation: none; } .dial .fill { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="case">
+      <span class="eyebrow">DFIR Lab · Malicious archive investigation</span>
+      <h1>Flag Submission</h1>
+      <p class="lede">Answer each question from your investigation. Correct answers lock in and add to your score. Q1–Q8 are worth 10 points each; Q9 is worth 20.</p>
+    </div>
+    <div class="score" aria-live="polite">
+      <svg class="dial" viewBox="0 0 64 64" aria-hidden="true">
+        <circle class="track" cx="32" cy="32" r="27"></circle>
+        <circle class="fill" id="dialFill" cx="32" cy="32" r="27" stroke-dasharray="169.65" stroke-dashoffset="169.65"></circle>
+      </svg>
+      <div>
+        <div class="score-num"><span id="score">0</span><small> / 100</small></div>
+        <div class="score-sub"><span id="solved">0</span> of 9 solved</div>
+      </div>
+    </div>
+  </header>
+
+  <section class="player">
+    <label for="pname">Participant</label>
+    <input type="text" id="pname" placeholder="Name or team ID" autocomplete="off">
+    <p class="rules">Answers are not case-sensitive. Enter domains without <code>http://</code>, file names with their extension, and timestamps as <code>YYYY-MM-DD HH:MM:SS</code> (UTC).</p>
+  </section>
+
+  <div class="done" id="done" hidden>
+    <strong>All flags captured</strong>
+    <span id="doneText"></span>
+  </div>
+
+  <ol class="qs" id="qs"></ol>
+
+  <div class="foot">
+    <span id="attemptsLine">Attempts: 0</span>
+    <div class="confirm" id="resetArea">
+      <button class="ghost" id="resetBtn" type="button">Reset progress</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SALT = "ctf-dz|";
+const QUESTIONS = [
+  { id: 1, title: "Hosting domain", pts: 10, kind: "domain", text: "Which domain hosted the malicious download?", ph: "example.com",
+    h: "dae0d54909e8e22b1e592b92d0fbded10448ae45b620f64d31ac7a07e84299e7" },
+  { id: 2, title: "Downloaded archive", pts: 10, kind: "text", text: "What is the file name of the archive that was downloaded?", ph: "filename.ext",
+    h: "cfd638a82463e0cf8cf27faf466038e127af3711e1bf944c2b260ce1880f1dc4" },
+  { id: 3, title: "Archive member", pts: 10, kind: "text", text: "What is the name of the file contained inside the archive?", ph: "filename.ext",
+    h: "71578d75e290a98f5439a8294b7b947959adbdffaaf2afbd237d16a80c009ad8" },
+  { id: 4, title: "Web-server software", pts: 10, kind: "text", text: "Which web-server software was the hosting site running?", ph: "Server name",
+    h: "bcafaf186f40b26d7142c654d41d2f0248ff5aaadfbc155d1f04a15b4051620a" },
+  { id: 5, title: "Server version string", pts: 10, kind: "text", text: "What version string did the server expose (e.g. in the <em>X-Powered-By</em> header)?", ph: "Product/x.y.z",
+    h: "b6d3a721d90ea633c9c4bf43207887e6235d808ac031e47236958ad3adc633be" },
+  { id: 6, title: "Malware classification", pts: 10, kind: "text", text: "How is the malicious file classified?", ph: "Malware type",
+    h: "a789f5753ae8144539163e862032b48ff28cab6126d20092f1354b5d1955ce05" },
+  { id: 7, title: "First-seen timestamp", pts: 10, kind: "time", text: "When was the sample first seen in the wild?", ph: "YYYY-MM-DD HH:MM:SS",
+    h: "9354a8e3412086b45dc61aafbb6b4aee04d1e0bf2acb8fdc41c84471b297d22f" },
+  { id: 8, title: "Contacted URLs", pts: 10, kind: "num", text: "How many URLs did the sample contact during execution?", ph: "Number",
+    h: "04bc6ae051b90530222edd147d3bb54d5772eaefa144c3b2b23fed2e1452f307" },
+  { id: 9, title: "Dropped files", pts: 20, kind: "num", text: "How many files did the sample drop on the system?", ph: "Number",
+    h: "08c6dc9148754361d6caf9a111bf5c0f181fce70e27d4be109ecd5880ede577f" },
+];
+const TOTAL = QUESTIONS.reduce((s, q) => s + q.pts, 0);
+const KEY = "ctf-malarchive-v1";
+
+function normalize(kind, v) {
+  let s = v.trim().toLowerCase().replace(/\s+/g, " ");
+  if (kind === "domain") s = s.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
+  if (kind === "time") s = s.replace(/[^0-9]/g, "");
+  if (kind === "num") s = s.replace(/[^0-9]/g, "").replace(/^0+(?=\d)/, "");
+  return s;
+}
+async function sha256(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+let state = { name: "", solved: {}, attempts: {}, answers: {} };
+try { const raw = localStorage.getItem(KEY); if (raw) state = Object.assign(state, JSON.parse(raw)); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+const list = document.getElementById("qs");
+QUESTIONS.forEach(q => {
+  const li = document.createElement("li");
+  li.className = "q"; li.id = "q" + q.id;
+  li.innerHTML = `
+    <div class="qid">Q${q.id}</div>
+    <div class="qhead"><h2 class="qtitle">${q.title}</h2><span class="pts${q.pts > 10 ? " big" : ""}">${q.pts} pts</span></div>
+    <p class="qtext">${q.text}</p>
+    <form class="row" data-id="${q.id}" novalidate>
+      <input type="text" id="ans${q.id}" placeholder="${q.ph}" autocomplete="off" spellcheck="false" aria-label="Answer for question ${q.id}">
+      <button type="submit" id="btn${q.id}">Submit</button>
+    </form>
+    <div class="status" id="st${q.id}" aria-live="polite"></div>`;
+  list.appendChild(li);
+});
+
+function render() {
+  let score = 0, solved = 0, attempts = 0;
+  QUESTIONS.forEach(q => {
+    const li = document.getElementById("q" + q.id), inp = document.getElementById("ans" + q.id),
+          btn = document.getElementById("btn" + q.id), st = document.getElementById("st" + q.id);
+    const a = state.attempts[q.id] || 0; attempts += a;
+    if (state.solved[q.id]) {
+      score += q.pts; solved++;
+      li.classList.add("solved");
+      inp.value = state.answers[q.id] || ""; inp.disabled = true;
+      btn.disabled = true; btn.textContent = "Solved";
+      st.className = "status ok"; st.textContent = `+${q.pts} points · solved in ${a} attempt${a === 1 ? "" : "s"}`;
+    } else {
+      li.classList.remove("solved"); inp.disabled = false; btn.disabled = false; btn.textContent = "Submit";
+      if (!a) { st.className = "status"; st.textContent = ""; }
+    }
+  });
+  document.getElementById("score").textContent = score;
+  document.getElementById("solved").textContent = solved;
+  document.getElementById("attemptsLine").textContent = `Attempts: ${attempts}`;
+  const C = 169.65;
+  document.getElementById("dialFill").style.strokeDashoffset = C - C * score / TOTAL;
+  const done = document.getElementById("done");
+  done.hidden = solved !== QUESTIONS.length;
+  if (!done.hidden) document.getElementById("doneText").textContent =
+    `${state.name ? state.name + " scored" : "Score:"} ${score}/${TOTAL} in ${attempts} total attempts.`;
+}
+
+list.addEventListener("submit", async e => {
+  e.preventDefault();
+  const id = +e.target.dataset.id, q = QUESTIONS.find(x => x.id === id);
+  const inp = document.getElementById("ans" + id), st = document.getElementById("st" + id), li = document.getElementById("q" + id);
+  const raw = inp.value;
+  if (!raw.trim()) { st.className = "status bad"; st.textContent = "Enter an answer before submitting."; inp.focus(); return; }
+  state.attempts[id] = (state.attempts[id] || 0) + 1;
+  let h;
+  try { h = await sha256(SALT + normalize(q.kind, raw)); }
+  catch (err) { st.className = "status bad"; st.textContent = "This browser could not check the answer. Open the page over https."; return; }
+  if (h === q.h) {
+    state.solved[id] = Date.now(); state.answers[id] = raw.trim();
+  } else {
+    st.className = "status bad";
+    st.textContent = `Incorrect. Attempt ${state.attempts[id]}. Check your evidence and try again.`;
+    li.classList.remove("shake"); void li.offsetWidth; li.classList.add("shake");
+    inp.select();
+  }
+  save(); render();
+});
+
+const pname = document.getElementById("pname");
+pname.value = state.name || "";
+pname.addEventListener("input", () => { state.name = pname.value.trim(); save(); render(); });
+
+const resetArea = document.getElementById("resetArea");
+function showResetBtn() {
+  resetArea.innerHTML = `<button class="ghost" id="resetBtn" type="button">Reset progress</button>`;
+  document.getElementById("resetBtn").onclick = askReset;
+}
+function askReset() {
+  resetArea.innerHTML = `<span>Clear all answers and score?</span>
+    <button class="danger" id="yesReset" type="button">Clear</button>
+    <button class="ghost" id="noReset" type="button">Cancel</button>`;
+  document.getElementById("yesReset").onclick = () => {
+    state = { name: state.name, solved: {}, attempts: {}, answers: {} };
+    QUESTIONS.forEach(q => { document.getElementById("ans" + q.id).value = ""; });
+    save(); render(); showResetBtn();
+  };
+  document.getElementById("noReset").onclick = showResetBtn;
+}
+document.getElementById("resetBtn").onclick = askReset;
+
+render();
+</script>
+
+</body></html>
